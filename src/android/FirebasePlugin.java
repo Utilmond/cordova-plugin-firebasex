@@ -13,6 +13,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.AsyncTask;
+import android.accounts.AccountManager;
+import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -445,31 +449,76 @@ public class FirebasePlugin extends CordovaPlugin {
             switch (requestCode) {
                 case GOOGLE_SIGN_IN:
                     Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                    GoogleSignInAccount acct;
-                    try{
-                        acct = task.getResult(ApiException.class);
-                    }catch (ApiException ae){
-                        if(ae.getStatusCode() == 10){
+                    GoogleSignInAccount account;
+                    try {
+                        account = task.getResult(ApiException.class);
+                    } catch (ApiException ae) {
+                        if (ae.getStatusCode() == 10) {
                             throw new Exception("Unknown server client ID");
-                        }else{
+                        } else {
                             throw new Exception(CommonStatusCodes.getStatusCodeString(ae.getStatusCode()));
                         }
                     }
-                    AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-                    String id = FirebasePlugin.instance.saveAuthCredential(credential);
-                    String idToken = acct.getIdToken();
 
-                    JSONObject returnResults = new JSONObject();
-                    returnResults.put("instantVerification", true);
-                    returnResults.put("id", id);
-                    returnResults.put("idToken", idToken);
-
-                    FirebasePlugin.activityResultCallbackContext.success(returnResults);
+                    new GetAuthToken().execute(account, cordova.getActivity());
                     break;
             }
         } catch (Exception e) {
             handleExceptionWithContext(e, FirebasePlugin.activityResultCallbackContext);
         }
+    }
+
+    public class GetAuthToken extends AsyncTask<Object, Void, Object[]> {
+        @Override
+        protected Object[] doInBackground(Object... params) {
+            try {
+                GoogleSignInAccount account = (GoogleSignInAccount) params[0];
+                Activity activity = (Activity) params[1];
+                AccountManager manager = AccountManager.get(activity);
+                AccountManagerFuture<Bundle> future = manager.getAuthToken(account.getAccount(), "oauth2:profile email", null, activity, null, null);
+                Bundle bundle = future.getResult();
+                String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+
+                Object[] returnResults = { account, authToken };
+
+                return returnResults;
+            } catch (Exception e) {
+                handleExceptionWithoutContext(e);
+
+                return new Object[0];
+            }
+        }
+
+        protected void onPostExecute(Object[] results) {
+            try {
+                GoogleSignInAccount account = (GoogleSignInAccount) results[0];
+                String authToken = (String) results[1];
+
+                onGoogleAuthFinished(account, authToken);
+            } catch (Exception e) {
+                handleExceptionWithoutContext(e);
+            }
+        }
+    }
+
+    private static void onGoogleAuthFinished(GoogleSignInAccount account, String authToken) throws JSONException {
+        String idToken = account.getIdToken();
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+        String id = FirebasePlugin.instance.saveAuthCredential(credential);
+        String firstName = account.getGivenName();
+        String lastName = account.getFamilyName();
+        String email = account.getEmail();
+        JSONObject returnResults = new JSONObject();
+
+        returnResults.put("instantVerification", true);
+        returnResults.put("id", id);
+        returnResults.put("idToken", idToken);
+        returnResults.put("accessToken", authToken);
+        returnResults.put("firstName", firstName);
+        returnResults.put("lastName", lastName);
+        returnResults.put("email", email);
+
+        FirebasePlugin.activityResultCallbackContext.success(returnResults);
     }
 
     /**
@@ -1682,12 +1731,15 @@ public class FirebasePlugin extends CordovaPlugin {
                     String clientId = args.getString(0);
 
                     GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestServerAuthCode(clientId)
                             .requestIdToken(clientId)
+                            .requestProfile()
                             .requestEmail()
                             .build();
 
                     GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(FirebasePlugin.instance.cordovaActivity, gso);
                     Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+
                     FirebasePlugin.activityResultCallbackContext = callbackContext;
                     FirebasePlugin.instance.cordovaInterface.startActivityForResult(FirebasePlugin.instance, signInIntent, GOOGLE_SIGN_IN);
                 } catch (Exception e) {
@@ -2238,11 +2290,11 @@ public class FirebasePlugin extends CordovaPlugin {
                     boolean timestamp = args.getBoolean(2);
 
                     Map<String, Object> docData = jsonStringToMap(jsonDoc);
-                    
+
                     if(timestamp){
                         docData.put("created", new Timestamp(new Date()));
-                        docData.put("lastUpdate", new Timestamp(new Date()));    
-                    }  
+                        docData.put("lastUpdate", new Timestamp(new Date()));
+                    }
 
                     firestore.collection(collection)
                             .add(docData)
@@ -2277,8 +2329,8 @@ public class FirebasePlugin extends CordovaPlugin {
                     Map<String, Object> docData = jsonStringToMap(jsonDoc);
 
                     if(timestamp){
-                        docData.put("lastUpdate", new Timestamp(new Date()));    
-                    }          
+                        docData.put("lastUpdate", new Timestamp(new Date()));
+                    }
 
                     firestore.collection(collection).document(documentId)
                             .set(docData)
@@ -2313,8 +2365,8 @@ public class FirebasePlugin extends CordovaPlugin {
                     Map<String, Object> docData = jsonStringToMap(jsonDoc);
 
                     if(timestamp){
-                        docData.put("lastUpdate", new Timestamp(new Date()));    
-                    }  
+                        docData.put("lastUpdate", new Timestamp(new Date()));
+                    }
 
                     firestore.collection(collection).document(documentId)
                             .update(docData)

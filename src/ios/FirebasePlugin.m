@@ -71,7 +71,7 @@ static NSMutableDictionary* traces;
         googlePlist = [NSMutableDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"]];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationLaunchedWithUrl:) name:CDVPluginHandleOpenURLNotification object:nil];
-        
+
         if([self getGooglePlistFlagWithDefaultValue:FirebaseCrashlyticsCollectionEnabled defaultValue:YES]){
             [self setPreferenceFlag:FIREBASE_CRASHLYTICS_COLLECTION_ENABLED flag:YES];
         }
@@ -772,10 +772,18 @@ static NSMutableDictionary* traces;
 
                     NSNumber* key = [[FirebasePlugin firebasePlugin] saveAuthCredential:credential];
                     NSString *idToken = user.authentication.idToken;
+                    NSString *accessToken = user.authentication.accessToken;
+                    NSString *givenName = user.profile.givenName;
+                    NSString *familyName = user.profile.familyName;
+                    NSString *email = user.profile.email;
                     NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
                     [result setValue:@"true" forKey:@"instantVerification"];
                     [result setValue:key forKey:@"id"];
                     [result setValue:idToken forKey:@"idToken"];
+                    [result setValue:accessToken forKey:@"accessToken"];
+                    [result setValue:givenName forKey:@"firstName"];
+                    [result setValue:familyName forKey:@"lastName"];
+                    [result setValue:email forKey:@"email"];
                     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
                 } else {
                   pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error.description];
@@ -1746,7 +1754,7 @@ static NSMutableDictionary* traces;
 
             NSMutableDictionary *document_mutable = [document mutableCopy];
 
-            if(timestamp){                
+            if(timestamp){
                 document_mutable[@"created"] = [FIRTimestamp timestampWithDate:[NSDate date]];
                 document_mutable[@"lastUpdate"] = [FIRTimestamp timestampWithDate:[NSDate date]];
             }
