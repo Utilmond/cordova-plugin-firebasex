@@ -781,8 +781,8 @@ static NSMutableDictionary* traces;
                     [result setValue:key forKey:@"id"];
                     [result setValue:idToken forKey:@"idToken"];
                     [result setValue:accessToken forKey:@"accessToken"];
-                    [result setValue:givenName forKey:@"firstName"];
-                    [result setValue:familyName forKey:@"lastName"];
+                    [result setValue:givenName forKey:@"givenName"];
+                    [result setValue:familyName forKey:@"familyName"];
                     [result setValue:email forKey:@"email"];
                     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
                 } else {

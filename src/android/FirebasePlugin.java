@@ -505,8 +505,8 @@ public class FirebasePlugin extends CordovaPlugin {
         String idToken = account.getIdToken();
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         String id = FirebasePlugin.instance.saveAuthCredential(credential);
-        String firstName = account.getGivenName();
-        String lastName = account.getFamilyName();
+        String givenName = account.getGivenName();
+        String familyName = account.getFamilyName();
         String email = account.getEmail();
         JSONObject returnResults = new JSONObject();
 
@@ -514,8 +514,8 @@ public class FirebasePlugin extends CordovaPlugin {
         returnResults.put("id", id);
         returnResults.put("idToken", idToken);
         returnResults.put("accessToken", authToken);
-        returnResults.put("firstName", firstName);
-        returnResults.put("lastName", lastName);
+        returnResults.put("givenName", givenName);
+        returnResults.put("familyName", familyName);
         returnResults.put("email", email);
 
         FirebasePlugin.activityResultCallbackContext.success(returnResults);
