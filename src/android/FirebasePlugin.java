@@ -475,7 +475,7 @@ public class FirebasePlugin extends CordovaPlugin {
                 GoogleSignInAccount account = (GoogleSignInAccount) params[0];
                 Activity activity = (Activity) params[1];
                 AccountManager manager = AccountManager.get(activity);
-                AccountManagerFuture<Bundle> future = manager.getAuthToken(account.getAccount(), "oauth2:profile email", null, activity, null, null);
+                AccountManagerFuture<Bundle> future = manager.getAuthToken(account.getAccount(), "oauth2:https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile", null, activity, null, null);
                 Bundle bundle = future.getResult();
                 String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
 
