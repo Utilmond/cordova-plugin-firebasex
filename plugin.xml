@@ -146,7 +146,7 @@
 		<framework src="AuthenticationServices.framework" />
 
 		<podspec>
-			<config>`
+			<config>
 				<source url="https://cdn.cocoapods.org/"/>
 			</config>
 			<pods use-frameworks="true">
