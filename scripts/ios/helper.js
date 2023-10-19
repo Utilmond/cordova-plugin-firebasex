@@ -11,8 +11,8 @@ var plist = require('plist');
 var comment = "\"Crashlytics\"";
 
 var versionRegex = /\d+\.\d+\.\d+/,
-    firebasePodRegex = /pod 'Firebase([^']+)', '(\d+\.\d+\.\d+(?:-(alpha|beta)(?:\d+)?)?)'/g,
-    standardFirestorePodRegEx = /pod 'FirebaseFirestore', '(\d+\.\d+\.\d+(?:-(alpha|beta)(?:\d+)?)?)'/,
+    firebasePodRegex = /pod 'Firebase\/([^']+)', '(\d+\.\d+\.\d+(?:-(alpha|beta)(?:\d+)?)?)'/g,
+    standardFirestorePodRegEx = /pod 'Firebase\/Firestore', '(\d+\.\d+\.\d+(?:-(alpha|beta)(?:\d+)?)?)'/,
     googleSignInPodRegEx = /pod 'GoogleSignIn', '(\d+\.\d+\.\d+)'/,
     googleTagManagerPodRegEx = /pod 'GoogleTagManager', '(\d+\.\d+\.\d+)'/,
     prebuiltFirestorePodTemplate = "pod 'FirebaseFirestore', :tag => '{version}', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git'",
